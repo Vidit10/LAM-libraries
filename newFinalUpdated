@@ -1,0 +1,178 @@
+#include "SSD1306.h"
+#include "DS18B20.h"
+#include "RotaryEncoder.h"
+#include "config.h"
+#include "pid.h"
+// #include "Teleplot.h"
+// #include <OneWire.h>
+// #include <math.h>
+
+// Initialize display, temperature sensor, and encoder
+SSD1306 display;
+DS18B20 sensor(DS18B20_PIN);
+RotaryEncoder encoder(Encoder_CLK, Encoder_DT, Encoder_SW); // pinA, pinB, pinSwitch
+
+// Temperature settings
+const int minTemp = 10;
+const int maxTemp = 25;
+float currentTemp = 0;  // Process value
+float desiredTemp = 19; // Set value
+int position = 19;    // This is equal to desiredTemp
+int lastPosition = 19;
+
+byte last_CLK = 0;
+
+float fn = (float)fc / fs;
+float alpha = 0.0;
+float error_filtered_previous;
+float last_integral;
+
+unsigned long time_stamp_previous = 0;
+unsigned long time_stamp_current = 0;
+
+float *PID(float);
+float calculateAlphaEMAFilter(float);
+
+// Teleplot teleplot("127.0.0.1");
+
+void setup()
+{
+  encoder.begin(); // Sets up the serial monitor to a baud rate of 115200
+  display.begin();
+
+  // Initialize temperature sensor
+  if (!sensor.begin())
+  {
+    Serial.println("Could not find DS18B20 sensor.");
+    while (1)
+      ;
+  }
+
+  pinMode(pumpA, OUTPUT);
+  pinMode(pumpB, OUTPUT);
+  pinMode(pumpPWM, OUTPUT);
+
+  pinMode(peltierControl, OUTPUT);
+
+  display.clearDisplay();
+  display.drawTable(); // The permanent components of the screen do not get refreshed everytime
+  display.display();
+
+  time_stamp_previous = millis();
+  alpha = calculateAlphaEMAFilter(fn);
+}
+
+void loop()
+{
+  // display.clearDisplay();
+  // display.drawTable();
+
+
+/*
+  for (int i = 0; i < 9; i++)
+  {
+    // === Rotary Encoder Logic ===
+    // /*
+    encoder.update();
+    Serial.println(i);
+    position += encoder.getPosition();
+    Serial.println(i);
+
+    if (position > maxTemp)
+    {
+      position = minTemp;
+    }
+    else if (position < minTemp)
+    {
+      position = maxTemp;
+    }
+
+    Serial.print("Encoder position: ");
+    Serial.println(position);
+
+    if (encoder.checkButtonPressDuration() > 2000)
+    {
+      Serial.println("Finalise key pressed!");
+      desiredTemp = position;
+    }
+    */
+
+    pidFunction();
+    // */
+
+    /*
+    encoder.update();
+    int newPosition = encoder.getPosition();
+
+    if (newPosition != lastPosition)
+    {
+      position += newPosition - lastPosition; // Update position based on the change
+      lastPosition = newPosition;             // Store the new position
+    }
+
+    // Wrap position if it goes out of bounds
+    if (position > maxTemp)
+    {
+      position = minTemp;
+    }
+    else if (position < minTemp)
+    {
+      position = maxTemp;
+    }
+
+    // Print updated position
+    Serial.print("Encoder position: ");
+    Serial.println(position);
+
+    // Check button press duration
+    if (encoder.checkButtonPressDuration() > 2000)
+    {
+      Serial.println("Finalize key pressed!");
+      desiredTemp = position;
+    }
+    */
+
+    // delay(100);
+  //}
+
+  // Read temperature
+  float tempReading = sensor.getTemperatureC();
+  currentTemp = tempReading;
+
+  if (currentTemp != -127.0)
+  {
+    Serial.print("Temperature: ");
+    Serial.print(currentTemp);
+    Serial.println(" °C");
+
+    display.drawText(currentTemp, 20, 28); // Process value
+  }
+  else
+  {
+    Serial.println("Error reading temperature");
+  }
+
+  // Display desired temperature
+  display.drawText(desiredTemp, 80, 28); // Set value
+  display.display();
+  // delay(100);
+}
+
+void pidFunction(){
+  int *control_value;
+  control_value = PID();
+  Serial.print("Pump Control Value");
+  Serial.println(control_value[0]);
+  Serial.print("Peltier Control Value");
+  Serial.println(control_value[1]);
+  digitalWrite(pumpA, HIGH);
+  digitalWrite(pumpB, LOW);
+  analogWrite(pumpPWM, 200);
+  analogWrite(peltierControl, 100);
+  // delay(1000);
+  analogWrite(pumpPWM, 100);
+  analogWrite(peltierControl, 100);
+  // delay(1000);
+  Serial.println(currentTemp);
+  // teleplot.update("Current Temperature", currentTemp);
+}
