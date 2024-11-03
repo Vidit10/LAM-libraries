@@ -3,15 +3,15 @@
 
 #include <Arduino.h>
 
-class RotaryEncoder {
+class EncoderLibrary {
 public:
-    RotaryEncoder(int pinA, int pinB, int pinSwitch);
+    EncoderLibrary(int pinA, int pinB, int pinSwitch);
     void begin();
     void update();
     int getPosition() const;
     bool isClockwise() const;
     bool isSwitchPressed() const;
-    int checkButtonPressDuration(); // New function for press duration check
+    void checkButtonPressDuration(); // New function for press duration check
 
 private:
     int _pinA;
