@@ -141,8 +141,8 @@ void loop()
 
   if (currentTemp != -127.0)
   {
-    Serial.print("Temperature: ");
-    Serial.print(currentTemp);
+    // Serial.print("Temperature: ");
+    // Serial.print(currentTemp);
     Serial.println(" °C");
 
     display.drawText(currentTemp, 20, 28); // Process value
@@ -159,20 +159,19 @@ void loop()
 }
 
 void pidFunction(){
-  int *control_value;
+   int *control_value;
   control_value = PID();
-  Serial.print("Pump Control Value");
-  Serial.println(control_value[0]);
-  Serial.print("Peltier Control Value");
-  Serial.println(control_value[1]);
+  // Serial.print("Pump Control Value");
+  // Serial.println(control_value[0]);
+  // Serial.print("Peltier Control Value");
+  // Serial.println(control_value[1]);
   digitalWrite(pumpA, HIGH);
   digitalWrite(pumpB, LOW);
-  analogWrite(pumpPWM, 200);
-  analogWrite(peltierControl, 100);
-  // delay(1000);
-  analogWrite(pumpPWM, 100);
-  analogWrite(peltierControl, 100);
-  // delay(1000);
-  Serial.println(currentTemp);
-  // teleplot.update("Current Temperature", currentTemp);
+  analogWrite(pumpPWM, control_value[0]);
+  // analogWrite(peltierControl, 100);
+  // delay(5000);
+  // analogWrite(pumpPWM, 100);
+  analogWrite(peltierControl, control_value[1]);
+  Serial.print(currentTemp);
+  // delay(5000);
 }
