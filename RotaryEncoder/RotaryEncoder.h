@@ -11,7 +11,7 @@ public:
     int getPosition() const;
     bool isClockwise() const;
     bool isSwitchPressed() const;
-    void checkButtonPressDuration(); // New function for press duration check
+    int checkButtonPressDuration(); // New function for press duration check
 
 private:
     int _pinA;
